@@ -240,12 +240,17 @@ def enhance_trunk_branch(marker_lookup, taboo_lookup):
     # Count total events for progress bar
     total_events = content.count('BEGIN:VEVENT')
     
-    # Extract header and footer
+    # Extract header (everything before first VEVENT)
     header_match = re.search(r'(.*?)BEGIN:VEVENT', content, re.DOTALL)
     header = header_match.group(1) if header_match else ""
     
-    footer_match = re.search(r'END:VEVENT(.*)', content, re.DOTALL)
-    footer = footer_match.group(1) if footer_match else ""
+    # Extract footer (everything after last VEVENT)
+    footer_match = re.search(r'END:VEVENT\s*$', content, re.DOTALL)
+    if footer_match:
+        footer_start = footer_match.start() + len('END:VEVENT')
+        footer = content[footer_start:]
+    else:
+        footer = ""
     
     # Split and process events
     events = content.split('BEGIN:VEVENT')[1:]
@@ -281,8 +286,13 @@ def split_into_two_files(content):
     header_match = re.search(r'(.*?)BEGIN:VEVENT', content, re.DOTALL)
     header = header_match.group(1) if header_match else ""
     
-    footer_match = re.search(r'END:VEVENT(.*)', content, re.DOTALL)
-    footer = footer_match.group(1) if footer_match else ""
+    # Match the LAST END:VEVENT to get true footer
+    footer_match = re.search(r'END:VEVENT\s*$', content, re.DOTALL)
+    if footer_match:
+        footer_start = footer_match.start() + len('END:VEVENT')
+        footer = content[footer_start:]
+    else:
+        footer = ""
     
     # Split events
     events = content.split('BEGIN:VEVENT')[1:]
